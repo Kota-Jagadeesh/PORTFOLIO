@@ -1,0 +1,109 @@
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+    min-height: 100vh;
+    color: #333;
+    cursor: url('/white_circle_dot.png') 8 8, auto; /* Assuming smaller cursor from previous adjustment */
+}
+
+.blog-detail-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.blog-detail-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.blog-detail-title {
+    font-size: 2.5em;
+    margin: 0.5em 0;
+    color: #004d40;
+}
+
+.blog-detail-meta {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.blog-detail-meta span {
+    margin-right: 15px;
+}
+
+.blog-detail-content {
+    line-height: 1.6;
+}
+
+.blog-detail-image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.blog-detail-paragraph {
+    margin-bottom: 1.5em;
+}
+
+.blog-detail-subtitle {
+    color: #004d40;
+    margin-top: 1.5em;
+}
+
+.blog-detail-list {
+    margin: 1em 0 1.5em 2em;
+    list-style-type: disc;
+}
+
+.blog-detail-list li {
+    margin-bottom: 0.5em;
+}
+
+.blog-detail-tags {
+    margin-top: 20px;
+}
+
+.blog-detail-tag {
+    display: inline-block;
+    background: #e0f7fa;
+    padding: 5px 10px;
+    margin-right: 10px;
+    border-radius: 12px;
+    font-size: 0.9em;
+    color: #004d40;
+}
+
+.blog-detail-footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #b2ebf2;
+}
+
+.blog-detail-footer-text {
+    color: #666;
+    font-style: italic;
+    margin-bottom: 20px;
+}
+
+.back-to-blog-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 1em;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.back-to-blog-btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px); /* Slight lift effect on hover */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
