@@ -1,75 +1,67 @@
-# from fastapi import FastAPI, APIRouter
-# from dotenv import load_dotenv
-# from starlette.middleware.cors import CORSMiddleware
-# from motor.motor_asyncio import AsyncIOMotorClient
-# import os
-# import logging
-# from pathlib import Path
-# from pydantic import BaseModel, Field
-# from typing import List
-# import uuid
-# from datetime import datetime
+from fastapi import FastAPI
+from fastapi.routing import APIRouter  # Ensure this import is present
+from pydantic import BaseModel, Field
+from typing import List
+import uuid
+from datetime import datetime
+import aiosqlite
+from contextlib import asynccontextmanager
 
+app = FastAPI()
+api_router = APIRouter(prefix="/api")
 
-# ROOT_DIR = Path(__file__).parent
-# load_dotenv(ROOT_DIR / '.env')
+# Global database connection
+db_connection = None
 
-# # MongoDB connection
-# mongo_url = os.environ['MONGO_URL']
-# client = AsyncIOMotorClient(mongo_url)
-# db = client[os.environ['DB_NAME']]
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global db_connection
+    db_connection = await aiosqlite.connect("portfolio.db")
+    await db_connection.execute("""
+        CREATE TABLE IF NOT EXISTS status_checks (
+            id TEXT PRIMARY KEY,
+            client_name TEXT,
+            timestamp TEXT
+        )
+    """)
+    await db_connection.commit()
+    yield
+    await db_connection.close()
 
-# # Create the main app without a prefix
-# app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
-# # Create a router with the /api prefix
-# api_router = APIRouter(prefix="/api")
+async def get_db():
+    return db_connection
 
+# Define Models
+class StatusCheck(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_name: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
 
-# # Define Models
-# class StatusCheck(BaseModel):
-#     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-#     client_name: str
-#     timestamp: datetime = Field(default_factory=datetime.utcnow)
+class StatusCheckCreate(BaseModel):
+    client_name: str
 
-# class StatusCheckCreate(BaseModel):
-#     client_name: str
+@api_router.get("/")
+async def root():
+    return {"message": "Hello World"}
 
-# # Add your routes to the router instead of directly to app
-# @api_router.get("/")
-# async def root():
-#     return {"message": "Hello World"}
+@api_router.post("/status", response_model=StatusCheck)
+async def create_status_check(input: StatusCheckCreate):
+    async with await get_db() as db:
+        await db.execute(
+            "INSERT INTO status_checks (id, client_name, timestamp) VALUES (?, ?, ?)",
+            (input.id, input.client_name, input.timestamp.isoformat())
+        )
+        await db.commit()
+    return StatusCheck(**input.model_dump())
 
-# @api_router.post("/status", response_model=StatusCheck)
-# async def create_status_check(input: StatusCheckCreate):
-#     status_dict = input.dict()
-#     status_obj = StatusCheck(**status_dict)
-#     _ = await db.status_checks.insert_one(status_obj.dict())
-#     return status_obj
+@api_router.get("/status", response_model=List[StatusCheck])
+async def get_status_checks():
+    status_checks = []
+    async with await get_db() as db:
+        async for row in db.execute("SELECT id, client_name, timestamp FROM status_checks"):
+            status_checks.append(StatusCheck(id=row[0], client_name=row[1], timestamp=datetime.fromisoformat(row[2])))
+    return status_checks
 
-# @api_router.get("/status", response_model=List[StatusCheck])
-# async def get_status_checks():
-#     status_checks = await db.status_checks.find().to_list(1000)
-#     return [StatusCheck(**status_check) for status_check in status_checks]
-
-# # Include the router in the main app
-# app.include_router(api_router)
-
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_credentials=True,
-#     allow_origins=["*"],
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
-
-# # Configure logging
-# logging.basicConfig(
-#     level=logging.INFO,
-#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-# )
-# logger = logging.getLogger(__name__)
-
-# @app.on_event("shutdown")
-# async def shutdown_db_client():
-#     client.close()
+app.include_router(api_router)
